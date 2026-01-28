@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-clike';
@@ -25,7 +25,7 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('explain');
 
-  const handleAnalyze = React.useCallback(async (mode = activeTab) => {
+  const handleAnalyze = useCallback(async (mode = activeTab) => {
     if (!code.trim()) return;
     setActiveTab(mode);
     setLoading(true);
@@ -43,7 +43,7 @@ const App = () => {
   }, [code, activeTab]);
 
   // Оптимизированная подсветка
-  const highlightCode = React.useCallback(code => {
+  const highlightCode = useCallback(code => {
     return highlight(code, languages.js);
   }, []);
 
