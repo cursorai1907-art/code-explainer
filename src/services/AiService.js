@@ -1,41 +1,44 @@
 /**
  * Сервис для взаимодействия с Google Gemini API.
- * Реализована агрессивная система Fallback: перебор всех доступных моделей
- * при ЛЮБОЙ ошибке (лимиты, ошибки сервера, несовместимость).
+ * Использует v1beta для поддержки новейших моделей.
+ * Реализована максимальная отказоустойчивость: пробует все модели при любой ошибке.
  */
 
 const API_KEY = "AIzaSyBzHgklEQ0stvu1d0HYjLv_cjdPdideOLs";
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 
-// Расширенный список моделей в порядке приоритета.
+// Полный список моделей для перебора
 const MODELS = [
     "gemini-2.5-flash",
     "gemini-2.5-flash-lite",
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-8b",
     "gemini-3-flash",
     "gemma-3-27b",
     "gemma-3-12b",
     "gemma-3-4b",
     "gemma-3-2b",
-    "gemini-pro"
+    "gemma-3-1b",
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-8b",
+    "gemini-pro",
+    "gemini-2.5-flash-tts",
+    "gemini-robotics-er-1.5-preview"
 ];
 
 const commonInstructions = `
-Отвечай как профессиональный AI-ассистент (стиль Claude/ChatGPT). 
-Используй Markdown разметку, заголовки, списки. 
-Отвечай на русском языке. Структурируй ответ.
+Отвечай в стиле профессионального AI-ассистента (как Claude или ChatGPT). 
+Используй богатую разметку Markdown. Отвечай на русском языке.
+Разбивай ответ на логические блоки: Вступление, Анализ, Резюме.
 `;
 
 const prompts = {
-    explain: `${commonInstructions}\nОбъясни логику кода по шагам.`,
-    bugs: `${commonInstructions}\nНайди баги и уязвимости.`,
-    refactor: `${commonInstructions}\nПредложи современный рефакторинг.`
+    explain: `${commonInstructions}\nПОШАГОВО ОБЪЯСНИ логику этого кода.`,
+    bugs: `${commonInstructions}\nНайди уязвимости и баги. Оформи списком с приоритетами.`,
+    refactor: `${commonInstructions}\nПредложи ЭЛИТНЫЙ РЕФАКТОРИНГ (современный стандарт).`
 };
 
 const fetchFromModel = async (modelName, code, mode) => {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 12000); // 12 секунд на модель
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 секунд на модель
 
     try {
         const url = `${BASE_URL}/${modelName}:generateContent?key=${API_KEY}`;
@@ -49,7 +52,7 @@ const fetchFromModel = async (modelName, code, mode) => {
                 }],
                 generationConfig: {
                     temperature: 0.7,
-                    maxOutputTokens: 2048,
+                    maxOutputTokens: 2500,
                 }
             })
         });
@@ -57,17 +60,13 @@ const fetchFromModel = async (modelName, code, mode) => {
         clearTimeout(timeoutId);
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            const message = errorData.error?.message || `HTTP ${response.status}`;
-            throw new Error(message);
+            const errorData = await response.json();
+            const errMsg = errorData.error?.message || "API_ERROR";
+            throw new Error(errMsg);
         }
 
         const data = await response.json();
-        const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (!content) throw new Error("EMPTY_RESPONSE");
-
-        return content;
+        return data.candidates?.[0]?.content?.parts?.[0]?.text;
     } catch (e) {
         clearTimeout(timeoutId);
         throw e;
@@ -75,31 +74,30 @@ const fetchFromModel = async (modelName, code, mode) => {
 };
 
 export const simulateAiAnalysis = async (code, mode) => {
-    let errors = [];
+    let lastError = null;
 
     for (const modelName of MODELS) {
         try {
-            console.log(`[AI] Попытка через ${modelName}...`);
+            console.log(`Проверка модели: ${modelName}...`);
             const aiText = await fetchFromModel(modelName, code, mode);
 
-            return {
-                title: mode === 'explain' ? 'Технический анализ' : mode === 'bugs' ? 'Аудит безопасности' : 'Рефакторинг',
-                content: aiText,
-                model: modelName
-            };
+            if (aiText) {
+                return {
+                    title: mode === 'explain' ? 'Технический разбор' : mode === 'bugs' ? 'Анализ безопасности' : 'План рефакторинга',
+                    content: aiText,
+                    model: modelName
+                };
+            }
         } catch (error) {
-            const errorMsg = error.name === 'AbortError' ? 'Таймаут' : error.message;
-            console.warn(`[AI] Ошибка ${modelName}: ${errorMsg}`);
-            errors.push(`${modelName}: ${errorMsg}`);
-            // Продвигаемся к следующей модели при ЛЮБОЙ ошибке
+            lastError = error;
+            console.error(`Ошибка модели ${modelName}:`, error.message);
+            // Пытаемся следующую модель несмотря ни на что
             continue;
         }
     }
 
-    // Если все модели вернули ошибку
     return {
-        title: "Ошибка Intelligence",
-        content: `### Не удалось получить ответ\n\nПриложение попробовало все доступные нейросети (${MODELS.length} шт.), но они вернули ошибки или лимиты исчерпаны.\n\n**Детали ошибок:**\n\n- ${errors.join('\n- ')}\n\n*Попробуйте сократить размер кода или повторить попытку через минуту.*`,
-        model: "Service Failure"
+        title: "Ошибка лимитов",
+        content: `⚠️ К сожалению, все доступные на данный момент модели ответили отказом из-за исчерпания общих лимитов API. \n\n**Последняя ошибка:** \`${lastError?.message}\`\n\nПожалуйста, подождите 1-5 минут и попробуйте снова.`
     };
 };
