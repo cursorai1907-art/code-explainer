@@ -1,16 +1,43 @@
-# React + Vite
+# CodeIntelligence Enterprise v2.5
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**CodeIntelligence** — это продвинутый инструмент для семантического анализа исходного кода, работающий на базе новейших моделей Google Gemini (включая 2.5 Flash и 3 Flash). Инструмент позволяет мгновенно получать экспертные объяснения, проводить аудит безопасности и планировать оптимизацию кода.
 
-Currently, two official plugins are available:
+![Preview](https://via.placeholder.com/1200x600/09090b/fafafa?text=CodeIntelligence+Enterprise+v2.5)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Основные возможности
 
-## React Compiler
+- 🌍 **Мультиязычность**: Поддержка любого языка программирования (JS, Python, C++, SQL, Rust и др.).
+- 🧠 **Тройной анализ**:
+  - **Объяснение**: Пошагово разбирает логику работы кода.
+  - **Безопасность**: Находит уязвимости и потенциальные баги.
+  - **Оптимизация**: Предлагает современный рефакторинг в стиле экспертов Claude/GPT.
+- 🛡️ **Система Fallback**: Автоматическое переключение между моделями (12 моделей в очереди) для обхода лимитов API.
+- 💎 **Modern Classic Design**: Адаптивный интерфейс с эффектами Glassmorphism, оптимизированный для экранов до 2600px.
+- ⚡ **Высокая скорость**: Таймауты и приоритизация быстрых моделей для мгновенного ответа.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🚀 Быстрый старт
 
-## Expanding the ESLint configuration
+1. Клонируйте репозиторий:
+   ```bash
+   git clone https://github.com/cursorai1907-art/code-explainer.git
+   ```
+2. Установите зависимости:
+   ```bash
+   npm install
+   ```
+3. Запустите в режиме разработки:
+   ```bash
+   npm run dev
+   ```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🛠 Технологический стек
+
+- **Frontend**: React, Vite, Tailwind CSS
+- **Animations**: Framer Motion
+- **AI Engine**: Google Gemini API (v1beta)
+- **Editor**: React Simple Code Editor + PrismJS
+- **Markdown**: React Markdown + Remark GFM
+
+## 📄 Лицензия
+
+© 2026 CodeIntel Global. Все права защищены.
